@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>A very important question</title>
+<meta name="robots" content="noindex">
+<title>Action required</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{min-height:100vh;display:grid;place-items:center;padding:20px;
@@ -17,31 +18,53 @@
   h1{font-size:24px;line-height:1.25;margin-bottom:8px}
   h2{font-size:19px;margin-bottom:6px}
   .sub{font-size:14px;opacity:.65;margin-bottom:20px}
-  .arena{position:relative;height:130px;margin-top:18px}
   button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:13px 22px;
          color:#fff;background:#e0446b;transition:transform .15s}
   button:active{transform:scale(.96)}
-  #yes{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:18px;
-       padding:15px 34px;box-shadow:0 8px 24px rgba(224,68,107,.4)}
-  #no{position:absolute;left:50%;top:76px;transform:translateX(-50%);
-      background:rgba(255,255,255,.12);transition:left .18s,top .18s,transform .18s}
+
+  .arena{position:relative;height:170px;margin-top:18px}
+  #no{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:18px;
+      padding:15px 34px;background:#e0446b;box-shadow:0 8px 24px rgba(224,68,107,.45);
+      transition:left .18s,top .18s,transform .18s,font-size .18s,padding .18s}
+  #yes{position:absolute;left:50%;top:92px;transform:translateX(-50%);font-size:14px;
+       padding:11px 20px;background:rgba(255,255,255,.12);transition:font-size .2s,padding .2s,background .2s}
+
   .grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
   .grid.three{grid-template-columns:repeat(3,1fr)}
   .opt{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
        border-radius:14px;padding:13px 8px;font-size:14px;color:#f6ecec}
   .opt.sel{background:#e0446b;border-color:#e0446b}
+  .opt.dead{opacity:.3;pointer-events:none;text-decoration:line-through}
   .opt b{display:block;font-size:17px}
   .opt small{opacity:.6}
+
   .next{margin-top:18px;width:100%;opacity:.35;pointer-events:none}
   .next.ready{opacity:1;pointer-events:auto}
-  input{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);
-        background:rgba(0,0,0,.25);color:#fff;font:inherit;display:none}
-  input.on{display:block}
-  .rcpt{text-align:left;background:rgba(0,0,0,.25);border-radius:14px;padding:16px;margin:16px 0;font-size:14px}
-  .rcpt div{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(255,255,255,.12)}
-  .rcpt div:last-child{border:0;font-size:17px;font-weight:600;padding-top:12px}
-  .msg{min-height:22px;font-size:13px;opacity:.75;margin-top:12px}
-  .ghost{background:rgba(255,255,255,.12);margin-top:10px;width:100%}
+  input[type=text]{width:100%;margin-top:12px;padding:12px;border-radius:12px;
+        border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);
+        color:#fff;font:inherit;display:none;text-align:center}
+  input[type=text].on{display:block}
+
+  .terms{text-align:left;font-size:13px;line-height:1.7;opacity:.85;list-style:none;margin-bottom:18px}
+  .terms li{padding:8px 0 8px 26px;position:relative;border-bottom:1px dashed rgba(255,255,255,.1)}
+  .terms li:before{content:"•";position:absolute;left:8px;color:#e0446b;font-size:18px;line-height:1}
+  .terms li:last-child{border:0}
+  .accept{display:flex;align-items:center;gap:10px;justify-content:center;
+          font-size:14px;cursor:pointer;padding:10px;user-select:none}
+  .accept input{display:block;width:18px;height:18px;margin:0;accent-color:#e0446b;cursor:pointer}
+
+  .fee{font-size:52px;font-weight:600;letter-spacing:-1px;color:#e0446b;padding:22px 0;
+       border-top:1px dashed rgba(255,255,255,.15);border-bottom:1px dashed rgba(255,255,255,.15);
+       transition:opacity .4s}
+  .fine{font-size:11px;opacity:.45;margin-top:10px;letter-spacing:.3px}
+  .msg{min-height:22px;font-size:14px;opacity:.9;margin-top:16px;line-height:1.6}
+
+  #review{display:none;position:fixed;inset:0;z-index:20;place-items:center;
+          background:rgba(10,6,12,.9);backdrop-filter:blur(4px);padding:24px}
+  #review.on{display:grid}
+  .rbox{width:100%;max-width:340px;text-align:center}
+  .bar{height:8px;border-radius:8px;background:rgba(255,255,255,.14);overflow:hidden;margin-top:16px}
+  .bar i{display:block;height:100%;width:0;background:#e0446b;transition:width .4s ease}
 </style>
 </head>
 <body>
@@ -49,10 +72,11 @@
 <section class="card on" id="s1">
   <h1>I have a proposal 💌</h1>
   <p class="sub">Read carefully. This is legally binding.</p>
-  <h2>Will you go on a date with me?</h2>
+  <h2 id="q">Will you go on a date with me?</h2>
+  <p class="sub" id="clock" style="margin:10px 0 0;color:#ffb3c6;font-size:13px"></p>
   <div class="arena">
-    <button id="yes">Yes 💖</button>
     <button id="no">No</button>
+    <button id="yes">yes</button>
   </div>
 </section>
 
@@ -60,116 +84,237 @@
   <h1>Knew it 😌</h1>
   <p class="sub">Pick your day</p>
   <div class="grid three" id="days"></div>
-  <p class="sub" style="margin:20px 0 10px">Pick a time</p>
+  <p class="sub" style="margin:22px 0 10px">Pick a time</p>
   <div class="grid three" id="times"></div>
   <button class="next" id="n2">Continue</button>
 </section>
 
 <section class="card" id="s3">
   <h1>Feeding you 🍽️</h1>
-  <p class="sub">Choose the cuisine</p>
+  <p class="sub">Choose the cuisine. Subject to approval.</p>
   <div class="grid" id="food"></div>
-  <input id="other" placeholder="Type it out then...">
-  <button class="next" id="n3">Continue</button>
+  <input type="text" id="other" placeholder="Type it out then...">
+  <button class="next" id="n3">Submit for review</button>
+</section>
+
+<section class="card" id="s35">
+  <h1>Terms &amp; Conditions 📜</h1>
+  <p class="sub">Read them. All of them.</p>
+  <ul class="terms">
+    <li>No phone at the table. Not once.</li>
+    <li>You compliment the outfit within 5 minutes of seeing it.</li>
+    <li>Banned replies: "okay", "next time", "I'll think about it".</li>
+    <li>I choose the dessert. Non negotiable.</li>
+    <li>No talking about work, deadlines, or your standup.</li>
+    <li>Minimum one photo together, without complaining.</li>
+    <li>Breach of any clause results in a second date as penalty.</li>
+  </ul>
+  <label class="accept">
+    <input type="checkbox" id="agree"> I have read and I accept
+  </label>
+  <button class="next" id="n35">Continue</button>
 </section>
 
 <section class="card" id="s4">
-  <h1>Booking confirmed ✅</h1>
-  <p class="sub">One last formality</p>
-  <div class="rcpt" id="rcpt"></div>
-  <button id="pay">Pay $50</button>
+  <h1>One last step 💳</h1>
+  <p class="sub" style="margin-bottom:26px">To confirm your acceptance of this date, please complete the transaction below.</p>
+  <div class="fee" id="fee">$499</div>
+  <p class="fine">one-time fee * non refundable * absolutely worth it</p>
+  <button id="pay" style="width:100%;margin-top:22px">Pay &amp; confirm</button>
   <p class="msg" id="msg"></p>
-  <button class="ghost" id="share" style="display:none">Send it to me 📲</button>
 </section>
 
+<div id="review">
+  <div class="rbox">
+    <p id="rtext">Reviewing your application...</p>
+    <div class="bar"><i id="fill"></i></div>
+    <p class="msg" id="verdict"></p>
+  </div>
+</div>
+
 <script>
-const CONFIG = {
-  price: 50,
-  payLink: "",            // leave empty = gag mode. paste a real Venmo/PayPal link to make it real
-  whatsapp: ""            // your number, digits only e.g. "919876543210"
-};
+/* ============ EDIT THIS ============ */
+const CONFIG = { price: 499 };
+const MAX_DENIALS = 2;
+/* =================================== */
 
 const pick = {day:"", time:"", food:""};
 const $ = id => document.getElementById(id);
 const show = id => {document.querySelectorAll('.card').forEach(c=>c.classList.remove('on')); $(id).classList.add('on');};
 
-/* 1. the No button that refuses to be caught */
-const no = $('no'), arena = document.querySelector('.arena');
+$('fee').textContent = "$" + CONFIG.price;
+$('pay').textContent = "Pay $" + CONFIG.price + " & confirm";
+
+const who = new URLSearchParams(location.search).get('n');
+if(who) $('q').textContent = who + ", will you go on a date with me?";
+
+let t = 300;
+setInterval(()=>{
+  if(t > 0){
+    t--;
+    $('clock').textContent = "Offer expires in " + String(Math.floor(t/60)).padStart(2,'0') + ":" + String(t%60).padStart(2,'0');
+  } else {
+    $('clock').textContent = "Expired. Just kidding, click yes.";
+  }
+}, 1000);
+
+/* ---------- 1. the No button ---------- */
+const no = $('no'), yes = $('yes'), arena = document.querySelector('.arena');
 let dodges = 0;
 const taunts = ["No","Nope","Sure?","Really?","Try again","Stop","Hmm","Fine, no"];
+
 function dodge(e){
   if(e) e.preventDefault();
-  const w = arena.clientWidth - no.offsetWidth, h = arena.clientHeight - no.offsetHeight;
+  const w = arena.clientWidth - no.offsetWidth;
+  const h = arena.clientHeight - no.offsetHeight;
+  dodges++;
   no.style.transform = "none";
-  no.style.left = Math.random()*w + "px";
-  no.style.top  = Math.max(60, Math.random()*h) + "px";
-  no.textContent = taunts[++dodges % taunts.length];
+  no.style.left = Math.max(0, Math.random()*w) + "px";
+  no.style.top  = Math.min(h*0.45, Math.random()*h) + "px";
+  no.textContent = taunts[dodges % taunts.length];
+  no.style.fontSize = Math.max(9, 18 - dodges) + "px";
+  no.style.padding = Math.max(6, 15 - dodges) + "px " + Math.max(10, 34 - dodges*3) + "px";
+  if(dodges >= 3){
+    no.style.background = "rgba(255,255,255,.12)";
+    no.style.boxShadow = "none";
+    yes.style.background = "#e0446b";
+    yes.style.fontSize = Math.min(20, 14 + dodges) + "px";
+    yes.style.padding = Math.min(16, 11 + dodges) + "px " + Math.min(38, 20 + dodges*3) + "px";
+    yes.style.boxShadow = "0 8px 24px rgba(224,68,107,.45)";
+    yes.textContent = "Yes 💖";
+  }
 }
-['mouseenter','touchstart','click','pointerdown'].forEach(ev => no.addEventListener(ev, dodge, {passive:false}));
-$('yes').onclick = () => show('s2');
+['mouseenter','touchstart','pointerdown','click'].forEach(ev => no.addEventListener(ev, dodge, {passive:false}));
 
-/* 2. next 7 days + times */
+yes.onclick = () => { confetti(); show('s2'); };
+
+function confetti(){
+  for(let i=0;i<60;i++){
+    const c = document.createElement('div');
+    c.textContent = ["💖","🌹","✨","💌"][i%4];
+    c.style.cssText = "position:fixed;left:"+(Math.random()*100)+"vw;top:-40px;font-size:"+(12+Math.random()*18)+"px;"+
+      "transition:transform 2.2s linear,opacity 2.2s;pointer-events:none;z-index:99";
+    document.body.appendChild(c);
+    requestAnimationFrame(()=>{
+      c.style.transform = "translateY(110vh) rotate("+(Math.random()*720)+"deg)";
+      c.style.opacity = 0;
+    });
+    setTimeout(()=>c.remove(), 2400);
+  }
+}
+
+/* ---------- 2. days + times ---------- */
+function sel(box, btn){[...box.children].forEach(c=>c.classList.remove('sel')); btn.classList.add('sel');}
+
 const days = $('days');
 for(let i=1;i<=7;i++){
   const d = new Date(); d.setDate(d.getDate()+i);
+  const wd = d.toLocaleDateString('en',{weekday:'short'});
+  const mo = d.toLocaleDateString('en',{month:'short'});
+  const label = wd + " " + d.getDate() + " " + mo;
   const b = document.createElement('button');
   b.className = 'opt';
-  b.innerHTML = `<b>${d.toLocaleDateString('en',{weekday:'short'})}</b><small>${d.getDate()} ${d.toLocaleDateString('en',{month:'short'})}</small>`;
-  b.onclick = () => {sel(days,b); pick.day = b.innerText.replace('\n',' '); check2();};
+  b.innerHTML = "<b>"+wd+"</b><small>"+d.getDate()+" "+mo+"</small>";
+  b.onclick = () => { sel(days,b); pick.day = label; check2(); };
   days.appendChild(b);
 }
+
 const times = $('times');
-["12:00 PM","1:30 PM","5:00 PM","6:30 PM","8:00 PM","9:30 PM"].forEach(t=>{
+["12:00 PM","1:30 PM","5:00 PM","6:30 PM","8:00 PM","9:30 PM"].forEach(tm=>{
   const b = document.createElement('button');
-  b.className='opt'; b.textContent=t;
-  b.onclick = () => {sel(times,b); pick.time=t; check2();};
+  b.className = 'opt'; b.textContent = tm;
+  b.onclick = () => { sel(times,b); pick.time = tm; check2(); };
   times.appendChild(b);
 });
-function sel(box,btn){[...box.children].forEach(c=>c.classList.remove('sel')); btn.classList.add('sel');}
+
 function check2(){ $('n2').classList.toggle('ready', !!(pick.day && pick.time)); }
 $('n2').onclick = () => show('s3');
 
-/* 3. cuisine */
+/* ---------- 3. cuisine + review ---------- */
+const LINES = {
+  Indian:   "Too easy. You always say Indian. Pick again.",
+  Japanese: "Denied. You'll just order the same roll.",
+  Chinese:  "No. Not in my mind. Pick again.",
+  Pizza:    "Absolutely not. Pick again.",
+  Tacos:    "Denied. You spill. Every single time."
+};
+const stalls = ["Reviewing your application...","Checking availability...","Consulting the committee...","Cross referencing your track record..."];
+let attempts = 0;
+let busy = false;
+
+function review(name, ok){
+  if(busy) return;
+  busy = true;
+  $('rtext').textContent = stalls[0];
+  $('verdict').textContent = "";
+  $('fill').style.width = "0%";
+  $('review').classList.add('on');
+  const steps = [25,55,80,97];
+  let i = 0;
+  const tick = setInterval(()=>{
+    $('rtext').textContent = stalls[i];
+    $('fill').style.width = steps[i] + "%";
+    if(++i >= steps.length){
+      clearInterval(tick);
+      setTimeout(()=>{
+        if(ok){
+          $('fill').style.width = "100%";
+          $('rtext').textContent = "Approved ✅";
+          $('verdict').textContent = name + " it is.";
+          setTimeout(()=>{ $('review').classList.remove('on'); busy = false; show('s35'); }, 1100);
+        } else {
+          $('rtext').textContent = "Denied ❌";
+          $('verdict').textContent = LINES[name] || "No. Not in my mind. Pick again.";
+          setTimeout(()=>{ $('review').classList.remove('on'); busy = false; }, 1700);
+        }
+      }, 700);
+    }
+  }, 700);
+}
+
 const food = $('food');
 [["🍛","Indian"],["🍣","Japanese"],["🥡","Chinese"],["🍕","Pizza"],["🌮","Tacos"],["✨","Others"]].forEach(([e,n])=>{
   const b = document.createElement('button');
-  b.className='opt'; b.innerHTML = `<b>${e}</b>${n}`;
+  b.className = 'opt';
+  b.innerHTML = "<b>"+e+"</b>"+n;
   b.onclick = () => {
-    sel(food,b); pick.food = n;
-    $('other').classList.toggle('on', n==="Others");
-    if(n!=="Others") $('other').value = "";
-    $('n3').classList.add('ready');
+    if(busy) return;
+    sel(food, b);
+    if(n === "Others"){
+      $('other').classList.add('on');
+      $('n3').classList.add('ready');
+      pick.food = "";
+      return;
+    }
+    $('other').classList.remove('on');
+    $('n3').classList.remove('ready');
+    pick.food = n;
+    const ok = attempts >= MAX_DENIALS;
+    attempts++;
+    if(!ok) b.classList.add('dead');
+    review(n, ok);
   };
   food.appendChild(b);
 });
+
 $('n3').onclick = () => {
-  if(pick.food==="Others" && $('other').value.trim()) pick.food = $('other').value.trim();
-  $('rcpt').innerHTML = `
-    <div><span>Date</span><span>${pick.day}</span></div>
-    <div><span>Time</span><span>${pick.time}</span></div>
-    <div><span>Cuisine</span><span>${pick.food}</span></div>
-    <div><span>Company</span><span>Your wife 💁‍♀️</span></div>
-    <div><span>Total</span><span>$${CONFIG.price}</span></div>`;
-  show('s4');
+  const v = $('other').value.trim();
+  if(!v) return;
+  pick.food = v;
+  review(v, true);
 };
 
-/* 4. payment */
-const lines = ["Processing...","Card declined 💳","Trying again...","Declined again 😬","Contacting your bank...","They said you're broke","Fine. It's on me 💖"];
-let step = 0;
+/* ---------- 4. terms ---------- */
+$('agree').onchange = e => $('n35').classList.toggle('ready', e.target.checked);
+$('n35').onclick = () => show('s4');
+
+/* ---------- 5. the fee that isn't ---------- */
 $('pay').onclick = () => {
-  if(CONFIG.payLink){ window.open(CONFIG.payLink,'_blank'); return; }
-  $('msg').textContent = lines[step];
-  if(++step >= lines.length){
-    $('pay').style.display = 'none';
-    $('msg').textContent = "Just show up. That's the payment. 🌹";
-    $('share').style.display = 'block';
-  }
-};
-$('share').onclick = () => {
-  const txt = `Date locked 🔒\n${pick.day} at ${pick.time}\nFood: ${pick.food}`;
-  if(CONFIG.whatsapp) window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(txt)}`,'_blank');
-  else { navigator.clipboard.writeText(txt); $('msg').textContent = "Copied. Paste it to me 😘"; }
+  $('pay').style.display = "none";
+  $('fee').style.textDecoration = "line-through";
+  $('fee').style.opacity = ".3";
+  $('msg').innerHTML = "Booking confirmed ✅<br>Pay me when you come back home 😌";
+  confetti();
 };
 </script>
 </body>
-</html>
