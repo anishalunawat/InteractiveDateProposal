@@ -7,7 +7,7 @@
 <title>Action required</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{min-height:100vh;display:grid;place-items:center;padding:20px;
+  body{min-height:100vh;display:grid;place-items:center;padding:20px;overflow-x:hidden;
        font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
        background:radial-gradient(circle at 20% 20%,#3b1d33,#150d17 60%);color:#f6ecec}
   .card{display:none;width:100%;max-width:440px;background:rgba(255,255,255,.05);
@@ -22,12 +22,13 @@
          color:#fff;background:#e0446b;transition:transform .15s}
   button:active{transform:scale(.96)}
 
-  .arena{position:relative;height:170px;margin-top:18px}
+  .arena{position:relative;height:180px;margin-top:18px}
   #no{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:18px;
       padding:15px 34px;background:#e0446b;box-shadow:0 8px 24px rgba(224,68,107,.45);
-      transition:left .18s,top .18s,transform .18s,font-size .18s,padding .18s}
-  #yes{position:absolute;left:50%;top:92px;transform:translateX(-50%);font-size:14px;
-       padding:11px 20px;background:rgba(255,255,255,.12);transition:font-size .2s,padding .2s,background .2s}
+      transition:left .2s ease,top .2s ease,transform .2s ease,font-size .2s,padding .2s,opacity .3s}
+  #yes{position:absolute;left:50%;top:100px;transform:translateX(-50%);font-size:14px;
+       padding:11px 20px;background:rgba(255,255,255,.12);
+       transition:font-size .25s,padding .25s,background .25s,box-shadow .25s}
 
   .grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
   .grid.three{grid-template-columns:repeat(3,1fr)}
@@ -65,6 +66,19 @@
   .rbox{width:100%;max-width:340px;text-align:center}
   .bar{height:8px;border-radius:8px;background:rgba(255,255,255,.14);overflow:hidden;margin-top:16px}
   .bar i{display:block;height:100%;width:0;background:#e0446b;transition:width .4s ease}
+
+  #stamp{display:none;position:fixed;inset:0;z-index:60;place-items:center;
+         background:rgba(10,6,12,.75);backdrop-filter:blur(3px);pointer-events:none}
+  #stamp.on{display:grid}
+  .st{border:5px solid #e0446b;color:#e0446b;border-radius:14px;
+      padding:16px 30px;font-size:30px;font-weight:800;letter-spacing:2px;
+      transform:rotate(-14deg) scale(4);opacity:0;
+      animation:slam .5s cubic-bezier(.2,1.4,.4,1) forwards}
+  @keyframes slam{
+    0%{transform:rotate(-14deg) scale(4);opacity:0}
+    70%{transform:rotate(-14deg) scale(.92);opacity:1}
+    100%{transform:rotate(-14deg) scale(1);opacity:1}
+  }
 </style>
 </head>
 <body>
@@ -78,6 +92,7 @@
     <button id="no">No</button>
     <button id="yes">yes</button>
   </div>
+  <p class="sub" id="count" style="font-size:12px;opacity:.4;margin:6px 0 0;min-height:18px"></p>
 </section>
 
 <section class="card" id="s2">
@@ -105,7 +120,7 @@
     <li>You compliment the outfit within 5 minutes of seeing it.</li>
     <li>Banned replies: "okay", "next time", "I'll think about it".</li>
     <li>I choose the dessert. Non negotiable.</li>
-    <li>No talking about work, deadlines, or your standup.</li>
+    <li>No talking about work, deadlines, or your meetings.</li>
     <li>Minimum one photo together, without complaining.</li>
     <li>Breach of any clause results in a second date as penalty.</li>
   </ul>
@@ -132,11 +147,16 @@
   </div>
 </div>
 
+<div id="stamp"><div class="st" id="stTxt">ACCEPTED</div></div>
+
 <script>
-/* ============ EDIT THIS ============ */
-const CONFIG = { price: 499 };
+/* ============ EDIT THESE ============ */
+const CONFIG = {
+  price: 499,
+  signoff: "Pay me when we meet next 😌"
+};
 const MAX_DENIALS = 2;
-/* =================================== */
+/* ==================================== */
 
 const pick = {day:"", time:"", food:""};
 const $ = id => document.getElementById(id);
@@ -158,35 +178,56 @@ setInterval(()=>{
   }
 }, 1000);
 
-/* ---------- 1. the No button ---------- */
+/* ---------- 1. the No button that will not be caught ---------- */
 const no = $('no'), yes = $('yes'), arena = document.querySelector('.arena');
-let dodges = 0;
-const taunts = ["No","Nope","Sure?","Really?","Try again","Stop","Hmm","Fine, no"];
+let dodges = 0, freed = false;
+const taunts = ["No","Nope","Sure?","Really?","Try again","Stop","Hmm","Not happening","Nice try","Nope again"];
 
 function dodge(e){
   if(e) e.preventDefault();
-  const w = arena.clientWidth - no.offsetWidth;
-  const h = arena.clientHeight - no.offsetHeight;
   dodges++;
-  no.style.transform = "none";
-  no.style.left = Math.max(0, Math.random()*w) + "px";
-  no.style.top  = Math.min(h*0.45, Math.random()*h) + "px";
+
+  /* on the 3rd attempt it escapes the card entirely */
+  if(dodges === 3 && !freed){
+    freed = true;
+    document.body.appendChild(no);
+    no.style.position = "fixed";
+    no.style.zIndex = "80";
+  }
+
+  const bw = freed ? window.innerWidth  : arena.clientWidth;
+  const bh = freed ? window.innerHeight : arena.clientHeight;
+  const pad = 12;
+
+  no.style.transform = "rotate(" + (Math.random()*40 - 20) + "deg)";
+  no.style.left = Math.max(pad, Math.random()*(bw - no.offsetWidth - pad)) + "px";
+  no.style.top  = Math.max(pad, Math.random()*(bh - no.offsetHeight - pad)) + "px";
+
   no.textContent = taunts[dodges % taunts.length];
   no.style.fontSize = Math.max(9, 18 - dodges) + "px";
-  no.style.padding = Math.max(6, 15 - dodges) + "px " + Math.max(10, 34 - dodges*3) + "px";
-  if(dodges >= 3){
-    no.style.background = "rgba(255,255,255,.12)";
-    no.style.boxShadow = "none";
-    yes.style.background = "#e0446b";
-    yes.style.fontSize = Math.min(20, 14 + dodges) + "px";
-    yes.style.padding = Math.min(16, 11 + dodges) + "px " + Math.min(38, 20 + dodges*3) + "px";
-    yes.style.boxShadow = "0 8px 24px rgba(224,68,107,.45)";
-    yes.textContent = "Yes 💖";
+  no.style.padding = Math.max(5, 15 - dodges) + "px " + Math.max(9, 34 - dodges*3) + "px";
+  no.style.opacity = Math.max(.2, 1 - dodges*0.08);
+  no.style.boxShadow = "none";
+  no.style.background = "rgba(255,255,255,.14)";
+
+  /* Yes swells with every failure */
+  yes.style.background = "#e0446b";
+  yes.style.fontSize = Math.min(22, 14 + dodges*1.5) + "px";
+  yes.style.padding = Math.min(18, 11 + dodges) + "px " + Math.min(44, 20 + dodges*4) + "px";
+  yes.style.boxShadow = "0 8px 28px rgba(224,68,107,.5)";
+  if(dodges >= 2) yes.textContent = "Yes 💖";
+
+  $('count').textContent = "escape attempts: " + dodges;
+
+  if(dodges >= 10){
+    no.textContent = "ok fine";
+    no.style.opacity = ".15";
+    $('count').textContent = "the No button has resigned";
   }
 }
 ['mouseenter','touchstart','pointerdown','click'].forEach(ev => no.addEventListener(ev, dodge, {passive:false}));
 
-yes.onclick = () => { confetti(); show('s2'); };
+yes.onclick = () => { no.style.display = "none"; confetti(); show('s2'); };
 
 function confetti(){
   for(let i=0;i<60;i++){
@@ -231,6 +272,7 @@ function check2(){ $('n2').classList.toggle('ready', !!(pick.day && pick.time));
 $('n2').onclick = () => show('s3');
 
 /* ---------- 3. cuisine + review ---------- */
+/* EDIT THESE. Generic denials are forgettable, specific ones land. */
 const LINES = {
   Indian:   "Too easy. You always say Indian. Pick again.",
   Japanese: "Denied. You'll just order the same roll.",
@@ -239,8 +281,7 @@ const LINES = {
   Tacos:    "Denied. You spill. Every single time."
 };
 const stalls = ["Reviewing your application...","Checking availability...","Consulting the committee...","Cross referencing your track record..."];
-let attempts = 0;
-let busy = false;
+let attempts = 0, busy = false;
 
 function review(name, ok){
   if(busy) return;
@@ -304,17 +345,26 @@ $('n3').onclick = () => {
   review(v, true);
 };
 
-/* ---------- 4. terms ---------- */
+/* ---------- 4. terms + stamp ---------- */
 $('agree').onchange = e => $('n35').classList.toggle('ready', e.target.checked);
-$('n35').onclick = () => show('s4');
+
+$('n35').onclick = () => {
+  const txt = $('stTxt');
+  txt.style.animation = "none";
+  void txt.offsetWidth;
+  txt.style.animation = "";
+  $('stamp').classList.add('on');
+  setTimeout(()=>{ $('stamp').classList.remove('on'); show('s4'); }, 1400);
+};
 
 /* ---------- 5. the fee that isn't ---------- */
 $('pay').onclick = () => {
   $('pay').style.display = "none";
   $('fee').style.textDecoration = "line-through";
   $('fee').style.opacity = ".3";
-  $('msg').innerHTML = "Booking confirmed ✅<br>Pay me when you come back home 😌";
+  $('msg').innerHTML = "Booking confirmed ✅<br>" + CONFIG.signoff;
   confetti();
 };
 </script>
 </body>
+</html>
